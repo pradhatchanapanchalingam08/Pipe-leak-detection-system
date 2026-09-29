@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pipe Leak Detection & Sealing System</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-reboot@4.6.1/reboot.min.css" onerror="this.remove()">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="app-layout">
+
+    <!-- ============ SIDEBAR ============ -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h1>Pipe Leak Detection &amp; Ultrasonic Sealing System</h1>
+            <span>Public Utility Drone Operations</span>
+        </div>
+        <ul class="nav-list">
+            <li><a id="nav-dashboard" data-section="dashboard" class="active">1. Dashboard</a></li>
+            <li><a id="nav-drones" data-section="drones">2. Drones</a></li>
+            <li><a id="nav-leaks" data-section="leaks">3. Leak Detection</a></li>
+            <li><a id="nav-contacts" data-section="contacts">4. Contacts</a></li>
+            <li><a id="nav-products" data-section="products">5. Products</a></li>
+            <li><a id="nav-accounts" data-section="accounts">6. Chart of Accounts</a></li>
+            <li><a id="nav-purchase-orders" data-section="purchase-orders">7. Purchase Orders</a></li>
+            <li><a id="nav-vendor-bills" data-section="vendor-bills">8. Vendor Bills</a></li>
+            <li><a id="nav-sales-orders" data-section="sales-orders">9. Sales Orders</a></li>
+            <li><a id="nav-invoices" data-section="invoices">10. Customer Invoices</a></li>
+            <li><a id="nav-payments" data-section="payments">11. Payments</a></li>
+            <li><a id="nav-sectors" data-section="sectors">12. Pipeline Sectors</a></li>
+            <li><a id="nav-budgets" data-section="budgets">13. Budgets</a></li>
+            <li><a id="nav-reports" data-section="reports">14. Reports</a></li>
+            <li><a id="admin-logout" href="#">15. Logout</a></li>
+        </ul>
+    </nav>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <main class="main-content">
+
+        <!-- 1. DASHBOARD -->
+        <section id="section-dashboard" class="section active">
+            <h2 class="page-title">Dashboard</h2>
+            <p class="page-subtitle">Overview of drone fleet, leaks and finance status.</p>
+            <div id="dashboard-cards" class="card-grid"></div>
+            <div class="panel">
+                <h3>Demo Workflow</h3>
+                <p class="muted">
+                    1) Add a drone &rarr; 2) Add a water board &amp; sealant supplier contact &rarr; 3) Add products &rarr;
+                    4) Add chart of accounts &rarr; 5) Create purchase order &rarr; 6) Create vendor bill &rarr; 7) Record vendor payment &rarr;
+                    8) Record a leak alert &rarr; 9) Dispatch drone &rarr; 10) Record sealant consumption &rarr; 11) Complete repair &rarr;
+                    12) Create sales order &rarr; 13) Complete sales order &rarr; 14) Create customer invoice &rarr; 15) Record customer payment &rarr; 16) View Reports.
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. DRONES -->
+        <section id="section-drones" class="section">
+            <h2 class="page-title">Pipe Crawler Drones</h2>
+            <p class="page-subtitle">Register drones, dispatch them, and manage their status.</p>
+
+            <div class="panel">
+                <h3>Add Drone</h3>
+                <form id="drone-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Drone Code</label>
+                            <input id="drone-code" type="text" placeholder="DRONE-003" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Drone Name</label>
+                            <input id="drone-name" type="text" placeholder="Crawler Gamma" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="drone-status">
+                                <option value="AVAILABLE">AVAILABLE</option>
+                                <option value="DISPATCHED">DISPATCHED</option>
+                                <option value="MAINTENANCE">MAINTENANCE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Battery Level (%)</label>
+                            <input id="drone-battery" type="number" min="0" max="100" value="100" />
+                        </div>
+                        <div class="form-group">
+                            <label>Current Location</label>
+                            <input id="drone-location" type="text" placeholder="Depot A" />
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Add Drone</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Registered Drones</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Code</th><th>Name</th><th>Status</th><th>Battery</th><th>Location</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="drones-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. LEAK DETECTION -->
+        <section id="section-leaks" class="section">
+            <h2 class="page-title">Leak Detection</h2>
+            <p class="page-subtitle">Simulated acoustic leak alerts, drone dispatch and repair tracking.</p>
+
+            <div class="panel">
+                <h3>Record Leak Alert</h3>
+                <form id="leak-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Pipe Location</label>
+                            <input id="leak-location" type="text" placeholder="Main St & 5th Ave" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Acoustic Level</label>
+                            <input id="leak-acoustic" type="number" step="0.1" placeholder="72.5" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Severity</label>
+                            <select id="leak-severity">
+                                <option value="LOW">LOW</option>
+                                <option value="MEDIUM">MEDIUM</option>
+                                <option value="HIGH">HIGH</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Pipeline Sector (optional)</label>
+                            <select id="leak-sector" class="sector-select"></select>
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Record Leak Alert</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Leak Alerts</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Location</th><th>Acoustic Level</th><th>Severity</th><th>Status</th><th>Drone</th><th>Detected At</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="leaks-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Record Sealant Consumption</h3>
+                <p class="muted">Use this after a drone has been dispatched to a leak, to record epoxy resin consumed during the repair.</p>
+                <form id="sealant-consume-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Leak ID</label>
+                            <input id="consume-leak-id-input" type="number" placeholder="1" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Sealant Product</label>
+                            <select id="consume-product-id" class="product-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity Used</label>
+                            <input id="consume-qty" type="number" min="1" value="1" required />
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Record Consumption</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 4. CONTACTS -->
+        <section id="section-contacts" class="section">
+            <h2 class="page-title">Contact Master</h2>
+            <p class="page-subtitle">Municipal water boards and sealant suppliers.</p>
+
+            <div class="panel">
+                <h3>Add Contact</h3>
+                <form id="contact-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input id="contact-name" type="text" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Type</label>
+                            <select id="contact-type">
+                                <option value="MUNICIPAL_WATER_BOARD">MUNICIPAL_WATER_BOARD</option>
+                                <option value="SEALANT_SUPPLIER">SEALANT_SUPPLIER</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input id="contact-email" type="email" />
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input id="contact-phone" type="text" />
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input id="contact-address" type="text" />
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Add Contact</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Contacts</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Name</th><th>Type</th><th>Email</th><th>Phone</th><th>Address</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="contacts-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. PRODUCTS -->
+        <section id="section-products" class="section">
+            <h2 class="page-title">Product Master</h2>
+            <p class="page-subtitle">Services and goods offered/consumed by the system.</p>
+
+            <div class="panel">
+                <h3>Add Product</h3>
+                <form id="product-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input id="product-name" type="text" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="product-type">
+                                <option value="SERVICE">SERVICE</option>
+                                <option value="GOODS">GOODS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input id="product-description" type="text" />
+                        </div>
+                        <div class="form-group">
+                            <label>Unit Price</label>
+                            <input id="product-price" type="number" step="0.01" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Stock Quantity</label>
+                            <input id="product-stock" type="number" value="0" />
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Add Product</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Products</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Name</th><th>Type</th><th>Description</th><th>Unit Price</th><th>Stock</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="products-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. CHART OF ACCOUNTS -->
+        <section id="section-accounts" class="section">
+            <h2 class="page-title">Chart of Accounts</h2>
+            <p class="page-subtitle">Assets, liabilities, income and expense accounts.</p>
+
+            <div class="panel">
+                <h3>Add Account</h3>
+                <form id="account-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Account Name</label>
+                            <input id="account-name" type="text" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Account Type</label>
+                            <select id="account-type">
+                                <option value="ASSET">ASSET</option>
+                                <option value="LIABILITY">LIABILITY</option>
+                                <option value="INCOME">INCOME</option>
+                                <option value="EXPENSE">EXPENSE</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Add Account</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Accounts</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Account Name</th><th>Type</th><th>Actions</th></tr></thead>
+                        <tbody id="accounts-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. PURCHASE ORDERS -->
+        <section id="section-purchase-orders" class="section">
+            <h2 class="page-title">Purchase Orders</h2>
+            <p class="page-subtitle">Order epoxy resin cartridges from sealant suppliers.</p>
+
+            <div class="panel">
+                <h3>Create Purchase Order</h3>
+                <form id="po-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Supplier</label>
+                            <select id="po-supplier"></select>
+                        </div>
+                    </div>
+                    <div id="po-items-container"></div>
+                    <button type="button" id="po-add-item-btn" class="btn secondary small" style="margin-bottom:10px;">+ Add Item</button>
+                    <br/>
+                    <button class="btn" type="submit">Create Purchase Order</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Purchase Orders</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Supplier ID</th><th>Order Date</th><th>Status</th><th>Total</th><th>Actions</th></tr></thead>
+                        <tbody id="po-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. VENDOR BILLS -->
+        <section id="section-vendor-bills" class="section">
+            <h2 class="page-title">Vendor Bills</h2>
+            <p class="page-subtitle">Bills raised by suppliers, optionally linked to a purchase order.</p>
+
+            <div class="panel">
+                <h3>Create Vendor Bill</h3>
+                <form id="bill-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Supplier</label>
+                            <select id="bill-supplier"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Purchase Order ID (optional)</label>
+                            <input id="bill-po" type="number" placeholder="e.g. 1" />
+                        </div>
+                        <div class="form-group">
+                            <label>Amount</label>
+                            <input id="bill-amount" type="number" step="0.01" required />
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Create Vendor Bill</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Vendor Bills</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Supplier ID</th><th>PO ID</th><th>Bill Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="bills-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. SALES ORDERS -->
+        <section id="section-sales-orders" class="section">
+            <h2 class="page-title">Sales Orders</h2>
+            <p class="page-subtitle">Monthly pipeline maintenance orders for municipal water boards.</p>
+
+            <div class="panel">
+                <h3>Create Sales Order</h3>
+                <form id="so-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Customer (Water Board)</label>
+                            <select id="so-customer"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Pipeline Sector (optional)</label>
+                            <select id="so-sector" class="sector-select"></select>
+                        </div>
+                    </div>
+                    <div id="so-items-container"></div>
+                    <button type="button" id="so-add-item-btn" class="btn secondary small" style="margin-bottom:10px;">+ Add Item</button>
+                    <br/>
+                    <button class="btn" type="submit">Create Sales Order</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Sales Orders</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Customer ID</th><th>Order Date</th><th>Status</th><th>Total</th><th>Actions</th></tr></thead>
+                        <tbody id="so-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10. CUSTOMER INVOICES -->
+        <section id="section-invoices" class="section">
+            <h2 class="page-title">Customer Invoices</h2>
+            <p class="page-subtitle">Invoices generated from completed sales orders.</p>
+
+            <div class="panel">
+                <h3>Create Invoice from Completed Sales Order</h3>
+                <form id="invoice-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Completed Sales Order</label>
+                            <select id="invoice-so-select"></select>
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Create Invoice</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Customer Invoices</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Customer ID</th><th>Sales Order ID</th><th>Invoice Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="invoices-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 11. PAYMENTS -->
+        <section id="section-payments" class="section">
+            <h2 class="page-title">Payments</h2>
+            <p class="page-subtitle">Record customer payments (against invoices) or vendor payments (against bills).</p>
+
+            <div class="panel">
+                <h3>Record Payment</h3>
+                <form id="payment-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Payment Type</label>
+                            <select id="payment-type">
+                                <option value="CUSTOMER_PAYMENT">CUSTOMER_PAYMENT (pays a Customer Invoice)</option>
+                                <option value="VENDOR_PAYMENT">VENDOR_PAYMENT (pays a Vendor Bill)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reference ID (Invoice ID or Bill ID)</label>
+                            <input id="payment-reference" type="number" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Amount</label>
+                            <input id="payment-amount" type="number" step="0.01" required />
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Record Payment</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Payments</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Type</th><th>Reference ID</th><th>Amount</th><th>Date</th><th>Method</th></tr></thead>
+                        <tbody id="payments-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 12. PIPELINE SECTORS -->
+        <section id="section-sectors" class="section">
+            <h2 class="page-title">Pipeline Sectors (Analytic Accounts)</h2>
+            <p class="page-subtitle">Group leaks, sales orders and budgets by pipeline zone.</p>
+
+            <div class="panel">
+                <h3>Add Pipeline Sector</h3>
+                <form id="sector-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input id="sector-name" type="text" placeholder="Water Main Zone East" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input id="sector-description" type="text" />
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Add Pipeline Sector</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Pipeline Sectors</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
+                        <tbody id="sectors-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 13. BUDGETS -->
+        <section id="section-budgets" class="section">
+            <h2 class="page-title">Budgets</h2>
+            <p class="page-subtitle">Planned budget vs. actuals per pipeline sector.</p>
+
+            <div class="panel">
+                <h3>Add Budget</h3>
+                <form id="budget-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Pipeline Sector</label>
+                            <select id="budget-sector" class="sector-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Budget Year</label>
+                            <input id="budget-year" type="number" value="2026" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Planned Amount</label>
+                            <input id="budget-planned" type="number" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label>Sealant Purchase Amount</label>
+                            <input id="budget-sealant" type="number" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label>Drone Charging Amount</label>
+                            <input id="budget-charging" type="number" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label>Repair Revenue Amount</label>
+                            <input id="budget-revenue" type="number" step="0.01" />
+                        </div>
+                    </div>
+                    <button class="btn" type="submit">Add Budget</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>Budgets</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Sector ID</th><th>Year</th><th>Planned</th><th>Sealant</th><th>Drone Charging</th><th>Repair Revenue</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="budgets-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 14. REPORTS -->
+        <section id="section-reports" class="section">
+            <h2 class="page-title">Reports</h2>
+            <p class="page-subtitle">Balance Sheet, Profit &amp; Loss, and Pipeline Sector Budget Report.</p>
+
+            <div class="panel report-block">
+                <h4>A. Balance Sheet</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Account</th><th>Amount</th></tr></thead>
+                        <tbody id="balance-sheet-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel report-block">
+                <h4>B. Profit &amp; Loss</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Account</th><th>Amount</th></tr></thead>
+                        <tbody id="profit-loss-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel report-block">
+                <h4>C. Pipeline Sector Budget Report</h4>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Pipeline Sector</th><th>Year</th><th>Planned Budget</th><th>Sealant Purchases</th><th>Drone Charging</th><th>Repair Revenue</th><th>Remaining Budget</th></tr>
+                        </thead>
+                        <tbody id="budget-report-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

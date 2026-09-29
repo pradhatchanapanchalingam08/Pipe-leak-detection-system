@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Customer Portal</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.customer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:22px}
+.note{padding:12px;background:#eef8fb;border-left:4px solid var(--primary);margin-bottom:18px}
+.order-grid{display:grid;grid-template-columns:1fr 130px 130px 120px;gap:10px;align-items:end;margin-bottom:12px}
+.order-row{display:grid;grid-template-columns:1fr 130px 130px 120px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.cart-total{display:flex;justify-content:flex-end;align-items:center;gap:18px;font-size:18px;font-weight:700;margin-top:18px}
+@media(max-width:700px){.order-grid,.order-row{grid-template-columns:1fr}.cart-total{justify-content:space-between}}
+</style>
+</head>
+<body>
+<div class="app-layout">
+<nav class="sidebar">
+<div class="sidebar-header"><h1>Customer Portal</h1><span>Public Utility Services</span></div>
+<ul class="nav-list">
+<li><a id="nav-customer-dashboard" class="active" href="#">Dashboard</a></li>
+<li><a id="nav-customer-place-order" href="#">Place Order</a></li>
+<li><a id="nav-customer-orders" href="#">My Service Orders</a></li>
+<li><a id="nav-customer-invoices" href="#">My Invoices</a></li>
+<li><a id="logout" href="#">Logout</a></li>
+</ul>
+</nav>
+<main class="main-content">
+<div class="top"><div><h2 class="page-title">Welcome, <span id="customerName">Customer</span></h2><p class="page-subtitle">Order utility services and view only your own orders and invoices.</p></div></div>
+
+<div id="customer-dashboard">
+<div class="note">Your account can place service orders and view only your own orders and invoices. Drone operations, leaks, suppliers, budgets and internal reports are restricted to Admin.</div>
+<div class="customer-grid" id="cards"></div>
+</div>
+
+<div id="place-order" class="section">
+<h2 class="page-title">Place an Order</h2>
+<p class="page-subtitle">Choose a service or product and quantity, then submit your order.</p>
+<div class="panel">
+<div class="order-grid">
+<div class="form-group"><label>Product / Service</label><select id="order-product"></select></div>
+<div class="form-group"><label>Quantity</label><input id="order-quantity" type="number" min="1" value="1"/></div>
+<div class="form-group"><label>Unit Price</label><input id="order-price" type="text" readonly/></div>
+<div><button class="btn" id="add-order-item" type="button">Add Item</button></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Amount</th><th>Action</th></tr></thead><tbody id="cartBody"></tbody></table></div>
+<div class="cart-total"><span>Total: <span id="cartTotal">$0.00</span></span><button class="btn success" id="place-order-btn" type="button">Place Order</button></div>
+</div>
+</div>
+
+<div id="orders" class="section">
+<h2 class="page-title">My Service Orders</h2>
+<div class="panel table-wrap"><table><thead><tr><th>ID</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
+</div>
+
+<div id="invoices" class="section">
+<h2 class="page-title">My Invoices</h2>
+<div class="panel table-wrap"><table><thead><tr><th>ID</th><th>Date</th><th>Sales Order</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="invoiceBody"></tbody></table></div>
+</div>
+</main>
+</div>
+<div id="toast"></div>
+<script>
+let products=[];
+let cart=[];
+
+async function api(url,opt={}){
+    const r=await fetch(url,{...opt,headers:{'Content-Type':'application/json',...(opt.headers||{})}});
+    const t=await r.text();
+    let d=null;
+    try{d=t?JSON.parse(t):null}catch(e){d={message:t}};
+    if(!r.ok)throw new Error(d?.message||'Request failed');
+    return d;
+}
+const money=n=>'$'+Number(n||0).toFixed(2);
+
+function show(id){
+    document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+    document.getElementById('customer-dashboard').style.display=id==='dashboard'?'block':'none';
+    if(id!=='dashboard')document.getElementById(id).classList.add('active');
+    if(id==='place-order')renderCart();
+}
+
+function renderCart(){
+    const body=document.getElementById('cartBody');
+    body.innerHTML=cart.map((x,i)=>`<tr><td>${x.name}</td><td>${x.quantity}</td><td>${money(x.unitPrice)}</td><td>${money(x.quantity*x.unitPrice)}</td><td><button class="btn small danger" onclick="removeItem(${i})">Remove</button></td></tr>`).join('')||'<tr><td colspan="5">No items added. Select a product above.</td></tr>';
+    const total=cart.reduce((s,x)=>s+x.quantity*x.unitPrice,0);
+    document.getElementById('cartTotal').textContent=money(total);
+}
+function removeItem(i){cart.splice(i,1);renderCart();}
+
+function updateSelectedPrice(){
+    const id=Number(document.getElementById('order-product').value);
+    const p=products.find(x=>x.id===id);
+    document.getElementById('order-price').value=p?money(p.unitPrice):'';
+}
+
+async function load(){
+    try{
+        const me=await api('/api/auth/me');
+        if(me.role!=='CUSTOMER'){location.href='/admin.html';return;}
+        document.getElementById('customerName').textContent=me.displayName;
+        const [o,i,p]=await Promise.all([api('/api/customer/orders'),api('/api/customer/invoices'),api('/api/customer/products')]);
+        products=p;
+        document.getElementById('order-product').innerHTML=products.map(x=>`<option value="${x.id}">${x.name} — ${money(x.unitPrice)}</option>`).join('');
+        updateSelectedPrice();
+        document.getElementById('cards').innerHTML=`<div class="stat-card"><div class="value">${o.length}</div><div class="label">My Service Orders</div></div><div class="stat-card"><div class="value">${i.length}</div><div class="label">My Invoices</div></div><div class="stat-card"><div class="value">${i.filter(x=>x.status==='UNPAID').length}</div><div class="label">Unpaid Invoices</div></div>`;
+        document.getElementById('ordersBody').innerHTML=o.map(x=>`<tr><td>${x.id}</td><td>${x.orderDate}</td><td>${x.status}</td><td>${money(x.totalAmount)}</td></tr>`).join('')||'<tr><td colspan="4">No service orders</td></tr>';
+        document.getElementById('invoiceBody').innerHTML=i.map(x=>`<tr><td>${x.id}</td><td>${x.invoiceDate}</td><td>${x.salesOrderId||'-'}</td><td>${money(x.amount)}</td><td>${x.status}</td><td>${x.status==='UNPAID'?`<button class="btn small" onclick="pay(${x.id})">Mark Paid</button>`:'Paid'}</td></tr>`).join('')||'<tr><td colspan="6">No invoices</td></tr>';
+    }catch(e){location.href='/';}
+}
+
+async function placeOrder(){
+    if(cart.length===0){alert('Add at least one item before placing the order.');return;}
+    try{
+        await api('/api/customer/orders',{method:'POST',body:JSON.stringify({items:cart.map(x=>({productId:x.productId,quantity:x.quantity,unitPrice:x.unitPrice}))})});
+        alert('Order placed successfully.');
+        cart=[];
+        await load();
+        show('orders');
+    }catch(e){alert(e.message);}
+}
+
+async function pay(id){try{await api('/api/customer/invoices/'+id+'/mark-paid',{method:'POST',body:'{}'});await load();show('invoices');}catch(e){alert(e.message)}}
+
+document.getElementById('nav-customer-dashboard').onclick=()=>show('dashboard');
+document.getElementById('nav-customer-place-order').onclick=()=>show('place-order');
+document.getElementById('nav-customer-orders').onclick=()=>show('orders');
+document.getElementById('nav-customer-invoices').onclick=()=>show('invoices');
+document.getElementById('order-product').onchange=updateSelectedPrice;
+document.getElementById('add-order-item').onclick=()=>{
+    const productId=Number(document.getElementById('order-product').value);
+    const quantity=Math.max(1,Number(document.getElementById('order-quantity').value||1));
+    const p=products.find(x=>x.id===productId);
+    if(!p)return;
+    const existing=cart.find(x=>x.productId===productId);
+    if(existing)existing.quantity+=quantity;
+    else cart.push({productId:p.id,name:p.name,quantity,unitPrice:Number(p.unitPrice)});
+    renderCart();
+};
+document.getElementById('place-order-btn').onclick=placeOrder;
+document.getElementById('logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}finally{location.href='/'}};
+load();
+</script>
+</body>
+</html>

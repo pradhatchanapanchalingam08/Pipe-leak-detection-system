@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pipe Utility System - Sign In</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.login-wrap{min-height:100vh;display:grid;place-items:center;background:var(--bg);padding:20px}.login-card{width:min(460px,100%);background:#fff;border:1px solid var(--border);border-radius:14px;padding:30px;box-shadow:0 8px 30px rgba(0,0,0,.08)}.login-card h1{margin:0 0 6px;color:var(--primary-dark);font-size:24px}.login-card p.sub{color:#667;font-size:13px;margin:0 0 22px}.tabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px}.tab{border:0;background:#f5f7f9;padding:11px;font-weight:700;cursor:pointer}.tab.active{background:var(--primary);color:#fff}.panel{display:none}.panel.active{display:block}.login-card label{display:block;font-size:12px;font-weight:600;margin:12px 0 5px}.login-card input{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;box-sizing:border-box}.login-card textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;box-sizing:border-box;min-height:70px;resize:vertical}.login-card .btn{width:100%;margin-top:18px}.demo{margin-top:18px;padding:12px;background:#f4f7f9;border-radius:7px;font-size:12px;color:#445}.message{margin-top:12px;font-size:13px;display:none;padding:10px;border-radius:6px}.message.error{color:#b42318;background:#fff1f0}.message.success{color:#16794a;background:#effaf4}.small{font-size:12px;color:#667;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="login-wrap"><div class="login-card">
+<h1>Pipe Utility System</h1>
+<p class="sub">Secure access for Water Network Directors and Customers</p>
+<div class="tabs"><button class="tab active" id="signInTab">Sign In</button><button class="tab" id="newUserTab">New User</button></div>
+
+<section class="panel active" id="signInPanel">
+<form id="loginForm">
+<label>Username</label><input id="username" required autocomplete="username"/>
+<label>Password</label><input id="password" type="password" required autocomplete="current-password"/>
+<button class="btn" type="submit">Sign In</button>
+<div id="loginMessage" class="message"></div>
+</form>
+<div class="demo"><b>Demo accounts</b><br>Admin: <b>admin</b> / <b>admin123</b><br>Customer: <b>customer</b> / <b>customer123</b></div>
+</section>
+
+<section class="panel" id="newUserPanel">
+<form id="registerForm">
+<label>Full Name</label><input id="regName" required autocomplete="name"/>
+<label>Username</label><input id="regUsername" required autocomplete="username"/>
+<label>Password</label><input id="regPassword" type="password" minlength="6" required autocomplete="new-password"/>
+<label>Email</label><input id="regEmail" type="email" autocomplete="email"/>
+<label>Phone</label><input id="regPhone" autocomplete="tel"/>
+<label>Address</label><textarea id="regAddress" autocomplete="street-address"></textarea>
+<button class="btn" type="submit">Create Customer Account</button>
+<div id="registerMessage" class="message"></div>
+<p class="small">New User registration creates a Customer account. Admin accounts are managed by the system administrator.</p>
+</form>
+</section>
+</div></div>
+<script>
+const signInTab=document.getElementById('signInTab'),newUserTab=document.getElementById('newUserTab');
+const signInPanel=document.getElementById('signInPanel'),newUserPanel=document.getElementById('newUserPanel');
+function showPanel(which){const signIn=which==='signin';signInTab.classList.toggle('active',signIn);newUserTab.classList.toggle('active',!signIn);signInPanel.classList.toggle('active',signIn);newUserPanel.classList.toggle('active',!signIn);}
+signInTab.onclick=()=>showPanel('signin');newUserTab.onclick=()=>showPanel('new');
+function showMessage(el,text,type){el.textContent=text;el.className='message '+type;el.style.display='block';}
+
+document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const msg=document.getElementById('loginMessage');msg.style.display='none';try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('username').value,password:document.getElementById('password').value})});const d=await r.json();if(!r.ok)throw new Error(d.message||'Invalid username or password');location.href=d.role==='ADMIN'?'/admin.html':'/customer.html';}catch(x){showMessage(msg,x.message,'error');}});
+
+document.getElementById('registerForm').addEventListener('submit',async e=>{e.preventDefault();const msg=document.getElementById('registerMessage');msg.style.display='none';const body={displayName:document.getElementById('regName').value,username:document.getElementById('regUsername').value,password:document.getElementById('regPassword').value,email:document.getElementById('regEmail').value,phone:document.getElementById('regPhone').value,address:document.getElementById('regAddress').value};try{const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||'Could not create account');showMessage(msg,'Account created successfully. Please Sign In.','success');document.getElementById('registerForm').reset();setTimeout(()=>{showPanel('signin');document.getElementById('username').value=body.username;},500);}catch(x){showMessage(msg,x.message,'error');}});
+</script>
+</body></html>
